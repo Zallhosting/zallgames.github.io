@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Ular dan Tangga</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, blue, red, black);
+            color: white;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 0;
+            font-size: 24px;
+        }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(10, 60px);
+            grid-gap: 2px;
+            margin: 20px auto;
+            width: 620px;
+            background-color: #333;
+            border: 5px solid #4CAF50;
+            padding: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(to bottom, #2b5797, #1b3c6b);
+            border-radius: 5px;
+            position: relative;
+        }
+        .even {
+            background: linear-gradient(to bottom, #4CAF50, #3B8C40);
+        }
+        .player {
+            width: 20px;
+            height: 40px;
+            position: absolute;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player::before {
+            content: '';
+            width: 15px;
+            height: 15px;
+            background-color: #00ff00;  /* Mengubah menjadi hijau */
+            border-radius: 50%;
+        }
+        .player::after {
+            content: '';
+            width: 5px;
+            height: 20px;
+            background-color: #00ff00;  /* Mengubah menjadi hijau */
+        }
+        .snake {
+            position: absolute;
+            width: 5px;
+            background: url('https://www.example.com/snake.png');  /* Gambar ular */
+            background-size: cover;
+            height: 100px;
+            transform: rotate(45deg);
+        }
+        .ladder {
+            position: absolute;
+            width: 10px;
+            background: #8B4513;  /* Coklat */
+            border-radius: 5px;
+            height: 120px; /* Menyesuaikan ukuran tangga */
+        }
+        .ladder-step {
+            position: absolute;
+            height: 5px;
+            width: 40px;
+            background-color: #FFF;
+            border-radius: 2px;
+        }
+        #controls {
+            margin: 20px;
+            font-size: 18px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <header>Permainan Ular dan Tangga</header>
+    <div id="board"></div>
+    <div id="controls">
+        <button id="rollDice">🎲 Lempar Dadu</button>
+        <p id="diceResult">Dadu: </p>
+        <p id="playerPosition">Posisi Pemain: 1</p>
+    </div>
+
+    <script>
+        const boardSize = 100;
+        const snakesAndLadders = {
+            3: 22,
+            6: 25,
+            20: 59,
+            57: 96,
+            25: 2,
+            52: 42,
+            70: 55,
+            99: 54
+        };
+        const playerPositions = [1, 1, 1, 1];
+
+        const board = document.getElementById('board');
+
+        for (let i = boardSize; i > 0; i--) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            if (i % 2 === 0) {
+                cell.classList.add('even');
+            }
+            cell.id = `cell-${i}`;
+            cell.textContent = i;
+            board.appendChild(cell);
+        }
+
+        // Gambar ular dan tangga
+        const drawSnakeOrLadder = (start, end, type) => {
+            const startCell = document.getElementById(`cell-${start}`);
+            const endCell = document.getElementById(`cell-${end}`);
+
+            if (type === 'snake') {
+                const snake = document.createElement('div');
+                snake.classList.add('snake');
+                snake.style.top = `${Math.min(startCell.offsetTop, endCell.offsetTop) + 20}px`;
+                snake.style.left = `${Math.min(startCell.offsetLeft, endCell.offsetLeft) + 30}px`;
+                board.appendChild(snake);
+            }
+
+            if (type === 'ladder') {
+                const ladder = document.createElement('div');
+                ladder.classList.add('ladder');
+                ladder.style.top = `${Math.min(startCell.offsetTop, endCell.offsetTop) + 20}px`;
+                ladder.style.left = `${Math.min(startCell.offsetLeft, endCell.offsetLeft) + 20}px`;
+                board.appendChild(ladder);
+
+                const stepsCount = 5; // Langkah tangga
+                for (let i = 0; i < stepsCount; i++) {
+                    const step = document.createElement('div');
+                    step.classList.add('ladder-step');
+                    step.style.top = `${parseFloat(ladder.style.top) + i * (parseFloat(ladder.style.height) / stepsCount)}px`;
+                    step.style.left = `${parseFloat(ladder.style.left) + 10}px`;
+                    board.appendChild(step);
+                }
+            }
+        };
+
+        Object.keys(snakesAndLadders).forEach(key => {
+            const start = parseInt(key);
+            const end = snakesAndLadders[key];
+            const type = end > start ? 'ladder' : 'snake';
+            drawSnakeOrLadder(start, end, type);
+        });
+
+        const updatePlayerPosition = () => {
+            document.querySelectorAll('.player').forEach(el => el.remove());
+            playerPositions.forEach((pos, index) => {
+                const playerCell = document.getElementById(`cell-${pos}`);
+                const playerToken = document.createElement('div');
+                playerToken.classList.add('player');
+                playerToken.style.backgroundColor = ['yellow', 'blue', 'green', 'red'][index];
+                playerToken.style.top = `${index * 10}px`;
+                playerCell.appendChild(playerToken);
+            });
+        };
+
+        const animatePlayer = (playerIndex, current, target) => {
+            const interval = setInterval(() => {
+                if (current < target) {
+                    current++;
+                } else {
+                    clearInterval(interval);
+                }
+                playerPositions[playerIndex] = current;
+                updatePlayerPosition();
+            }, 300);
+        };
+
+        updatePlayerPosition();
+
+        document.getElementById('rollDice').addEventListener('click', () => {
+            const diceRolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+            const diceSum = diceRolls.reduce((a, b) => a + b, 0);
+            document.getElementById('diceResult').textContent = `Dadu: ${diceRolls.join(', ')} (Jumlah: ${diceSum})`;
+
+            for (let i = 0; i < 4; i++) {
+                let nextPosition = playerPositions[i] + diceRolls[i];
+                if (nextPosition > boardSize) {
+                    alert(`Pemain ${i + 1} lempar terlalu tinggi! Tetap di posisi yang sama.`);
+                    continue;
+                }
+
+                if (snakesAndLadders[nextPosition]) {
+                    const oldPosition = nextPosition;
+                    nextPosition = snakesAndLadders[nextPosition];
+                    if (nextPosition > oldPosition) {
+                        alert(`Pemain ${i + 1} menemukan tangga! Naik ke ${nextPosition}`);
+                    } else {
+                        alert(`Oh tidak, Pemain ${i + 1} kena ular! Turun ke ${nextPosition}`);
+                    }
+                }
+
+                animatePlayer(i, playerPositions[i], nextPosition);
+
+                if (playerPositions[i] === boardSize) {
+                    alert(`Pemain ${i + 1} menang! Selamat!`);
+                    playerPositions[i] = 1;
+                }
+            }
+
+            document.getElementById('playerPosition').textContent = `Posisi Pemain: ${playerPositions.join(', ')}`;
+        });
+    </script>
+</body>
+</html>
