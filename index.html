@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="zallkaltim" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Permainan Ular dan Tangga</title>
     <style>
         body {
@@ -59,19 +59,19 @@
             content: '';
             width: 15px;
             height: 15px;
-            background-color: #00ff00;  /* Mengubah menjadi hijau */
+            background-color: #00ff00;
             border-radius: 50%;
         }
         .player::after {
             content: '';
             width: 5px;
             height: 20px;
-            background-color: #00ff00;  /* Mengubah menjadi hijau */
+            background-color: #00ff00;
         }
         .snake {
             position: absolute;
             width: 5px;
-            background: url('https://www.example.com/snake.png');  /* Gambar ular */
+            background: url('https://www.example.com/snake.png');
             background-size: cover;
             height: 100px;
             transform: rotate(45deg);
@@ -79,9 +79,9 @@
         .ladder {
             position: absolute;
             width: 10px;
-            background: #8B4513;  /* Coklat */
+            background: #8B4513;
             border-radius: 5px;
-            height: 120px; /* Menyesuaikan ukuran tangga */
+            height: 120px;
         }
         .ladder-step {
             position: absolute;
@@ -116,9 +116,9 @@
     <header>Permainan Ular dan Tangga</header>
     <div id="board"></div>
     <div id="controls">
-        <button id="rollDice">🎲 Lempar Dadu</button>
+        <button id="rollDice">🎲 Lempar Dadu (Pemain 1)</button>
         <p id="diceResult">Dadu: </p>
-        <p id="playerPosition">Posisi Pemain: 1</p>
+        <p id="playerPosition">Posisi Pemain: 1, 1, 1, 1, AI: 1</p>
     </div>
 
     <script>
@@ -133,9 +133,11 @@
             70: 55,
             99: 54
         };
-        const playerPositions = [1, 1, 1, 1];
+        const playerPositions = [1, 1, 1, 1, 1]; // 4 pemain dan 1 AI
+        let currentPlayer = 0; // Pemain yang giliran
 
         const board = document.getElementById('board');
+        const rollButton = document.getElementById('rollDice');
 
         for (let i = boardSize; i > 0; i--) {
             const cell = document.createElement('div');
@@ -148,7 +150,6 @@
             board.appendChild(cell);
         }
 
-        // Gambar ular dan tangga
         const drawSnakeOrLadder = (start, end, type) => {
             const startCell = document.getElementById(`cell-${start}`);
             const endCell = document.getElementById(`cell-${end}`);
@@ -192,7 +193,7 @@
                 const playerCell = document.getElementById(`cell-${pos}`);
                 const playerToken = document.createElement('div');
                 playerToken.classList.add('player');
-                playerToken.style.backgroundColor = ['yellow', 'blue', 'green', 'red'][index];
+                playerToken.style.backgroundColor = ['yellow', 'blue', 'green', 'red', 'purple'][index];
                 playerToken.style.top = `${index * 10}px`;
                 playerCell.appendChild(playerToken);
             });
@@ -210,40 +211,48 @@
             }, 300);
         };
 
-        updatePlayerPosition();
-
-        document.getElementById('rollDice').addEventListener('click', () => {
-            const diceRolls = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-            const diceSum = diceRolls.reduce((a, b) => a + b, 0);
-            document.getElementById('diceResult').textContent = `Dadu: ${diceRolls.join(', ')} (Jumlah: ${diceSum})`;
-
-            for (let i = 0; i < 4; i++) {
-                let nextPosition = playerPositions[i] + diceRolls[i];
+        const aiMove = () => {
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            setTimeout(() => {
+                alert(`AI Melempar Dadu: ${diceRoll}`);
+                let nextPosition = playerPositions[4] + diceRoll;
                 if (nextPosition > boardSize) {
-                    alert(`Pemain ${i + 1} lempar terlalu tinggi! Tetap di posisi yang sama.`);
-                    continue;
+                    nextPosition = playerPositions[4]; // Tetap di posisi yang sama jika melewati batas
                 }
+                playerPositions[4] = nextPosition;
+                updatePlayerPosition();
+                checkNextTurn();
+            }, 1000);
+        };
 
-                if (snakesAndLadders[nextPosition]) {
-                    const oldPosition = nextPosition;
-                    nextPosition = snakesAndLadders[nextPosition];
-                    if (nextPosition > oldPosition) {
-                        alert(`Pemain ${i + 1} menemukan tangga! Naik ke ${nextPosition}`);
-                    } else {
-                        alert(`Oh tidak, Pemain ${i + 1} kena ular! Turun ke ${nextPosition}`);
-                    }
-                }
+        const checkNextTurn = () => {
+            currentPlayer = (currentPlayer + 1) % 5; // Bergiliran 5 pemain (termasuk AI)
+            updateTurnDisplay();
+        };
 
-                animatePlayer(i, playerPositions[i], nextPosition);
-
-                if (playerPositions[i] === boardSize) {
-                    alert(`Pemain ${i + 1} menang! Selamat!`);
-                    playerPositions[i] = 1;
-                }
+        const updateTurnDisplay = () => {
+            rollButton.textContent = `🎲 Lempar Dadu (Pemain ${currentPlayer + 1})`;
+            if (currentPlayer === 4) { // Giliran AI
+                aiMove();
             }
+        };
 
-            document.getElementById('playerPosition').textContent = `Posisi Pemain: ${playerPositions.join(', ')}`;
+        rollButton.addEventListener('click', () => {
+            if (currentPlayer === 4) return; // AI tidak menekan tombol
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            alert(`Pemain ${currentPlayer + 1} Melempar Dadu: ${diceRoll}`);
+            let nextPosition = playerPositions[currentPlayer] + diceRoll;
+            if (nextPosition > boardSize) {
+                nextPosition = playerPositions[currentPlayer]; // Tetap di posisi yang sama jika melewati batas
+            }
+            playerPositions[currentPlayer] = nextPosition;
+            updatePlayerPosition();
+            checkNextTurn();
         });
+
+        updatePlayerPosition();
+        updateTurnDisplay();
+
     </script>
 </body>
 </html>
