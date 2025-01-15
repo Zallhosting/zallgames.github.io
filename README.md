@@ -1,2 +1,3 @@
 # zallgames.github.io
-asdfghj
+new game zallkaltim anti gagal
+buruan cobain
